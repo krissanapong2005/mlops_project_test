@@ -3,15 +3,24 @@ from collections import Counter
 from yaml import safe_load
 from torchvision import datasets, transforms
 import mlflow
-import os, mlflow  # (ให้อยู่บรรทัดบนๆ)
-# ถ้ารันบน GitHub Actions ให้ใช้ local file backend เสมอ
-if os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") == "true":
-    mlflow.set_tracking_uri("file:./mlruns")
+from mlflow.tracking import MlflowClient
 
-# อ่าน config + ตั้งชื่อ experiment (ให้รองรับ ENV บน CI)
-cfg = safe_load(open("mlops_pipeline/config/params.yaml", encoding="utf-8"))
-exp_name = os.getenv("EXPERIMENT_NAME", cfg["mlflow"]["experiment"])
-mlflow.set_experiment(exp_name)
+# ==== CI-safe MLflow bootstrap ====
+if os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") == "true":
+    track_dir = os.path.abspath("./mlruns")
+    mlflow.set_tracking_uri("file:" + track_dir)
+    exp_name = os.getenv("EXPERIMENT_NAME", "cifar10-ci")
+    client = MlflowClient()
+    exp = client.get_experiment_by_name(exp_name)
+    if exp is None:
+        exp_id = client.create_experiment(exp_name, artifact_location="file:" + track_dir)
+    else:
+        exp_id = exp.experiment_id
+    mlflow.set_experiment(exp_name)
+else:
+    cfg_top = safe_load(open("mlops_pipeline/config/params.yaml", encoding="utf-8"))
+    mlflow.set_experiment(cfg_top["mlflow"]["experiment"])
+# ==================================
 
 def main():
     cfg = safe_load(open("mlops_pipeline/config/params.yaml", encoding="utf-8"))
@@ -24,7 +33,6 @@ def main():
     labels = train_ds.targets
     dist = Counter(labels)
 
-    mlflow.set_experiment(cfg["mlflow"]["experiment"])
     with mlflow.start_run(run_name="data_validation"):
         mlflow.set_tag("ml.step", "data_validation")
         mlflow.log_metric("train_size", len(train_ds))

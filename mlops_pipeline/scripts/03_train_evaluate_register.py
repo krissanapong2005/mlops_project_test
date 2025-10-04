@@ -5,15 +5,20 @@ from torch.utils.data import DataLoader, random_split, Subset
 from torchvision import datasets, transforms, models
 from mlflow.tracking import MlflowClient
 
-import os, mlflow  # (ให้อยู่บรรทัดบนๆ)
-# ถ้ารันบน GitHub Actions ให้ใช้ local file backend เสมอ
+# ==== CI-safe MLflow bootstrap ====
 if os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") == "true":
-    mlflow.set_tracking_uri("file:./mlruns")
-
-# อ่าน config + ตั้งชื่อ experiment (ให้รองรับ ENV บน CI)
-cfg = safe_load(open("mlops_pipeline/config/params.yaml", encoding="utf-8"))
-exp_name = os.getenv("EXPERIMENT_NAME", cfg["mlflow"]["experiment"])
-mlflow.set_experiment(exp_name)
+    track_dir = os.path.abspath("./mlruns")
+    mlflow.set_tracking_uri("file:" + track_dir)
+    exp_name = os.getenv("EXPERIMENT_NAME", "cifar10-ci")
+    client_boot = MlflowClient()
+    exp = client_boot.get_experiment_by_name(exp_name)
+    if exp is None:
+        client_boot.create_experiment(exp_name, artifact_location="file:" + track_dir)
+    mlflow.set_experiment(exp_name)
+else:
+    cfg_top = safe_load(open("mlops_pipeline/config/params.yaml", encoding="utf-8"))
+    mlflow.set_experiment(cfg_top["mlflow"]["experiment"])
+# ==================================
 
 def build_transforms(spec):
     return transforms.Compose([
@@ -28,7 +33,6 @@ def load_transform_artifact(preprocess_run_id):
         with open(path, "r") as f:
             return json.load(f)
     except Exception:
-        # fallback hard-coded
         return {
             "resize": [32,32],
             "normalize_mean": [0.4914,0.4822,0.4465],
@@ -38,7 +42,7 @@ def load_transform_artifact(preprocess_run_id):
 def get_loaders(cfg, tfm):
     root = cfg["dataset"]["root"]
     full_train = datasets.CIFAR10(root=root, train=True,  download=False, transform=tfm)
-    test_ds    = datasets.CIFAR10(root=root, train=False, download=False, transform= tfm)
+    test_ds    = datasets.CIFAR10(root=root, train=False, download=False, transform=tfm)
 
     N = len(full_train)
     val_sz = int(0.10 * N)
@@ -100,7 +104,6 @@ def main():
     criterion = nn.CrossEntropyLoss()
     opt = optim.Adam(model.parameters(), lr=cfg["train"]["lr"])
 
-    mlflow.set_experiment(cfg["mlflow"]["experiment"])
     run_name = f'{cfg["train"]["model_name"]}_DEV' if fast else cfg["train"]["model_name"]
 
     with mlflow.start_run(run_name=run_name) as run:
@@ -131,21 +134,17 @@ def main():
         mlflow.log_metric("test_acc", test_acc)
         print("Test acc:", test_acc)
 
-        # log model
         mlflow.pytorch.log_model(model, "model")
 
-        # try register (skip if registry not available)
         model_uri = f"runs:/{run.info.run_id}/model"
         model_name = cfg["mlflow"]["registered_model_name"]
         try:
             mv = mlflow.register_model(model_uri, model_name)
             client = MlflowClient()
             stage = "Production" if test_acc >= threshold else "Staging"
-            # ถ้าใช้ Stages:
             try:
                 client.transition_model_version_stage(name=model_name, version=mv.version, stage=stage, archive_existing=True)
             except Exception:
-                # ถ้าใช้ Aliases:
                 alias = "prod" if stage == "Production" else "staging"
                 client.set_registered_model_alias(name=model_name, alias=alias, version=mv.version)
             print(f"Registered {model_name} v{mv.version} -> {stage}")

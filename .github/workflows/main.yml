@@ -11,6 +11,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.10" }
+      - name: Enable UTF-8 + pip cache
+        run: |
+          echo "PYTHONUTF8=1" >> $GITHUB_ENV
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -28,28 +31,35 @@ jobs:
     needs: ci-checks
     runs-on: ubuntu-latest
     env:
-      # บังคับให้ใช้ local file backend ใน runner (จะเขียนไว้ใน ./mlruns)
+      # บังคับให้ใช้ local file backend บน runner (ไม่วิ่งไป /C:)
       MLFLOW_TRACKING_URI: file:./mlruns
       MLFLOW_ARTIFACT_URI: ./mlruns
-      # ตั้งชื่อ experiment เฉพาะใน CI เพื่อไม่ไปชนของเครื่องคุณ
-      EXPERIMENT_NAME: cifar10-ci
-      FAST_DEV: "1"
+      EXPERIMENT_NAME: cifar10-ci     # ชื่อ experiment แยกจากเครื่องเรา
+      FAST_DEV: "1"                   # รันเร็วบน CI
+      PYTHONUTF8: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.10" }
+
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
       - name: Data Validation
         run: python mlops_pipeline/scripts/01_data_validation.py
+
       - name: Preprocess
         id: prep
         run: python mlops_pipeline/scripts/02_data_preprocessing.py
+
       - name: Train + Evaluate + Register
         run: python mlops_pipeline/scripts/03_train_evaluate_register.py ${{ steps.prep.outputs.run_id }} 0.85
+
+      # เก็บผลลัพธ์เสมอ (แม้ job fail) เพื่อช่วยไล่ปัญหา
       - name: Upload mlruns (local tracking)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mlruns
