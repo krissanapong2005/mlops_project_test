@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/user/Desktop/data_mlops/mlruns/408409963165410473/db14114204724b2a8c017d4a7b76098d/artifacts
+end_time: 1759556063057
+entry_point_name: ''
+experiment_id: '408409963165410473'
+lifecycle_stage: active
+run_id: db14114204724b2a8c017d4a7b76098d
+run_name: preprocess_setup
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759556063004
+status: 3
+tags: []
+user_id: user

@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/user/Desktop/data_mlops/mlruns/408409963165410473/f5371e65c4cf4851a8274c215f0797d8/artifacts
+end_time: 1759556059870
+entry_point_name: ''
+experiment_id: '408409963165410473'
+lifecycle_stage: active
+run_id: f5371e65c4cf4851a8274c215f0797d8
+run_name: data_validation
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759556059607
+status: 3
+tags: []
+user_id: user

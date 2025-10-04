@@ -1,0 +1,14 @@
+artifact_uri: file:///C:/Users/user/Desktop/data_mlops/mlruns/408409963165410473/bda9f9747d374e97b1235ede6fb84835/artifacts
+end_time: 1759556448793
+entry_point_name: ''
+experiment_id: '408409963165410473'
+lifecycle_stage: active
+run_id: bda9f9747d374e97b1235ede6fb84835
+run_name: resnet18_DEV
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1759556132485
+status: 3
+tags: []
+user_id: user

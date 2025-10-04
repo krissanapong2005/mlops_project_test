@@ -1,0 +1,13 @@
+Train: 50000
+Test: 10000
+Classes: airplane, automobile, bird, cat, deer, dog, frog, horse, ship, truck
+class_0 (airplane): 5000
+class_1 (automobile): 5000
+class_2 (bird): 5000
+class_3 (cat): 5000
+class_4 (deer): 5000
+class_5 (dog): 5000
+class_6 (frog): 5000
+class_7 (horse): 5000
+class_8 (ship): 5000
+class_9 (truck): 5000

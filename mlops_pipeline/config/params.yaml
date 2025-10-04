@@ -1,0 +1,19 @@
+dataset:
+  root: "./data"
+  fast_dev: true
+  train_subset: 10000
+  val_subset: 2000
+
+train:
+  batch_size: 128
+  epochs: 2
+  lr: 0.003
+  num_workers: 0
+  model_name: "resnet18"
+
+eval:
+  threshold: 0.85
+
+mlflow:
+  experiment: "cifar10"
+  registered_model_name: "cifar10-classifier"

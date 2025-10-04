@@ -1,0 +1,6 @@
+artifact_location: file:///C:/Users/user/Desktop/data_mlops/mlruns/408409963165410473
+creation_time: 1759556059061
+experiment_id: '408409963165410473'
+last_update_time: 1759556059061
+lifecycle_stage: active
+name: cifar10

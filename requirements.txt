@@ -1,0 +1,12 @@
+numpy<2.0
+pandas
+scikit-learn
+mlflow
+torch
+torchvision
+Pillow
+pyyaml
+fastapi
+uvicorn
+flake8
+pytest
