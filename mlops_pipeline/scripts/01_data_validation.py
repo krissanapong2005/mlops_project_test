@@ -3,6 +3,15 @@ from collections import Counter
 from yaml import safe_load
 from torchvision import datasets, transforms
 import mlflow
+import os, mlflow  # (ให้อยู่บรรทัดบนๆ)
+# ถ้ารันบน GitHub Actions ให้ใช้ local file backend เสมอ
+if os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") == "true":
+    mlflow.set_tracking_uri("file:./mlruns")
+
+# อ่าน config + ตั้งชื่อ experiment (ให้รองรับ ENV บน CI)
+cfg = safe_load(open("mlops_pipeline/config/params.yaml", encoding="utf-8"))
+exp_name = os.getenv("EXPERIMENT_NAME", cfg["mlflow"]["experiment"])
+mlflow.set_experiment(exp_name)
 
 def main():
     cfg = safe_load(open("mlops_pipeline/config/params.yaml", encoding="utf-8"))

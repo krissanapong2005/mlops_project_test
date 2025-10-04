@@ -28,8 +28,11 @@ jobs:
     needs: ci-checks
     runs-on: ubuntu-latest
     env:
+      # บังคับให้ใช้ local file backend ใน runner (จะเขียนไว้ใน ./mlruns)
       MLFLOW_TRACKING_URI: file:./mlruns
       MLFLOW_ARTIFACT_URI: ./mlruns
+      # ตั้งชื่อ experiment เฉพาะใน CI เพื่อไม่ไปชนของเครื่องคุณ
+      EXPERIMENT_NAME: cifar10-ci
       FAST_DEV: "1"
     steps:
       - uses: actions/checkout@v4
